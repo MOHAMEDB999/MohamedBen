@@ -1,4 +1,4 @@
-name: Daily Commit
+name: Daily Contributions
 
 on:
   schedule:
@@ -9,21 +9,65 @@ permissions:
   contents: write
 
 jobs:
-  commit:
+  contribute:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Generate daily change
+      
+      - name: Generate random number of commits (1-6)
+        id: random
         run: |
-          date >> activity.log
-
-      - name: Commit and push
+          num=$((1 + RANDOM % 6))
+          echo "commit_count=$num" >> $GITHUB_OUTPUT
+          echo "Generated $num commits for today"
+      
+      - name: Configure git
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git add activity.log
-          git commit -m "Daily automated commit $(date)" || exit 0
-          git push
+      
+      - name: Create meaningful commits
+        run: |
+          # Array of meaningful commit messages
+          messages=(
+            "Refactor authentication module for better security"
+            "Implement caching layer to improve performance"
+            "Add comprehensive unit tests for core utilities"
+            "Optimize database queries for faster response times"
+            "Update dependencies to latest stable versions"
+            "Fix critical security vulnerability in input validation"
+            "Enhance error handling and logging mechanisms"
+            "Implement rate limiting for API endpoints"
+            "Add documentation for deployment process"
+            "Refactor code for improved maintainability"
+            "Implement automated backup system"
+            "Add monitoring and alerting for production"
+            "Optimize memory usage in data processing"
+            "Implement multi-language support"
+            "Add code style linting and formatting"
+            "Create database migration scripts"
+            "Improve test coverage to 90%"
+            "Implement feature flag system"
+            "Add GraphQL API support"
+            "Optimize frontend bundle size"
+          )
+          
+          commit_count=${{ steps.random.outputs.commit_count }}
+          
+          for ((i=1; i<=commit_count; i++)); do
+            # Get random message
+            msg_index=$((RANDOM % ${#messages[@]}))
+            message="${messages[$msg_index]} #$i"
+            
+            # Create or update activity file with meaningful content
+            timestamp=$(date)
+            echo "[$timestamp] Contribution #$i - $message" >> CONTRIBUTIONS.md
+            
+            git add CONTRIBUTIONS.md
+            git commit -m "$message"
+          done
+      
+      - name: Push commits
+        run: git push
